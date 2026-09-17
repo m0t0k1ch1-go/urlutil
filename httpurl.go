@@ -1,6 +1,7 @@
 package urlutil
 
 import (
+	_ "database/sql"
 	"database/sql/driver"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
