@@ -83,11 +83,9 @@ func (hu *HTTPURL) setString(s string) error {
 	return hu.setURL(u)
 }
 
-// URL returns a copy of the underlying url.URL.
+// URL returns a copy of the underlying [url.URL].
 func (hu HTTPURL) URL() *url.URL {
-	u := hu.u
-
-	return &u
+	return hu.u.Clone()
 }
 
 // String implements fmt.Stringer.
