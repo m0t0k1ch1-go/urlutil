@@ -2,13 +2,23 @@ package urlutil
 
 import (
 	"bytes"
-	_ "database/sql"
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"net/url"
+)
+
+var (
+	_ fmt.Stringer         = HTTPURL{}
+	_ driver.Valuer        = HTTPURL{}
+	_ sql.Scanner          = (*HTTPURL)(nil)
+	_ json.MarshalerTo     = HTTPURL{}
+	_ json.Marshaler       = HTTPURL{}
+	_ json.UnmarshalerFrom = (*HTTPURL)(nil)
+	_ json.Unmarshaler     = (*HTTPURL)(nil)
 )
 
 // HTTPURL represents a HTTP(S) URL.
