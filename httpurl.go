@@ -1,6 +1,7 @@
 package urlutil
 
 import (
+	"bytes"
 	_ "database/sql"
 	"database/sql/driver"
 	"encoding/json/jsontext"
@@ -129,6 +130,17 @@ func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return json.MarshalEncode(enc, hu.String())
 }
 
+// MarshalJSON implements [json.Marshaler].
+// It encodes the value as a JSON string.
+func (hu HTTPURL) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	if err := hu.MarshalJSONTo(jsontext.NewEncoder(&buf)); err != nil {
+		return nil, err
+	}
+
+	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
+}
+
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
 // It accepts a JSON string.
 func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
@@ -142,4 +154,10 @@ func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	}
 
 	return hu.setString(s)
+}
+
+// UnmarshalJSON implements [json.Unmarshaler].
+// It accepts a JSON string.
+func (hu *HTTPURL) UnmarshalJSON(b []byte) error {
+	return hu.UnmarshalJSONFrom(jsontext.NewDecoder(bytes.NewReader(b)))
 }

@@ -18,7 +18,9 @@ func TestHTTPURL(t *testing.T) {
 	require.Implements(t, (*driver.Valuer)(nil), &hu)
 	require.Implements(t, (*sql.Scanner)(nil), &hu)
 	require.Implements(t, (*json.MarshalerTo)(nil), &hu)
+	require.Implements(t, (*json.Marshaler)(nil), &hu)
 	require.Implements(t, (*json.UnmarshalerFrom)(nil), &hu)
+	require.Implements(t, (*json.Unmarshaler)(nil), &hu)
 }
 
 func TestNewHTTPURL(t *testing.T) {
@@ -429,6 +431,35 @@ func TestHTTPURL_MarshalJSONTo(t *testing.T) {
 	})
 }
 
+func TestHTTPURL_MarshalJSON(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		tcs := []struct {
+			name string
+			in   urlutil.HTTPURL
+			want []byte
+		}{
+			{
+				"http",
+				urlutil.MustNewHTTPURLFromString("http://m0t0k1ch1.com"),
+				[]byte(`"http://m0t0k1ch1.com"`),
+			},
+			{
+				"https",
+				urlutil.MustNewHTTPURLFromString("https://m0t0k1ch1.com"),
+				[]byte(`"https://m0t0k1ch1.com"`),
+			},
+		}
+
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				b, err := tc.in.MarshalJSON()
+				require.NoError(t, err)
+				require.Equal(t, tc.want, b)
+			})
+		}
+	})
+}
+
 func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 	t.Run("failure", func(t *testing.T) {
 		tcs := []struct {
@@ -504,6 +535,88 @@ func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				var hu urlutil.HTTPURL
 				err := json.Unmarshal(tc.in, &hu)
+				require.NoError(t, err)
+				require.Equal(t, tc.want, hu.String())
+			})
+		}
+	})
+}
+
+func TestHTTPURL_UnmarshalJSON(t *testing.T) {
+	t.Run("failure", func(t *testing.T) {
+		tcs := []struct {
+			name string
+			in   []byte
+			want string
+		}{
+			{
+				"empty",
+				[]byte{},
+				"",
+			},
+			{
+				"null",
+				[]byte(`null`),
+				"invalid json string: null",
+			},
+			{
+				"bool",
+				[]byte(`true`),
+				"invalid json string",
+			},
+			{
+				"string: empty",
+				[]byte(`""`),
+				"invalid url string: empty",
+			},
+			{
+				"string: missing scheme",
+				[]byte(`"://m0t0k1ch1.com"`),
+				"invalid url string",
+			},
+			{
+				"string: invalid host: empty",
+				[]byte(`"http://"`),
+				"invalid url: invalid host: empty",
+			},
+			{
+				"string: invalid scheme: ftp",
+				[]byte(`"ftp://m0t0k1ch1.com"`),
+				"invalid url: invalid scheme: must be http or https",
+			},
+		}
+
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				var hu urlutil.HTTPURL
+				err := hu.UnmarshalJSON(tc.in)
+				require.ErrorContains(t, err, tc.want)
+			})
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		tcs := []struct {
+			name string
+			in   []byte
+			want string
+		}{
+			{
+				"string: http",
+				[]byte(`"http://m0t0k1ch1.com"`),
+				"http://m0t0k1ch1.com",
+			},
+			{
+				"string: https",
+				[]byte(`"https://m0t0k1ch1.com"`),
+				"https://m0t0k1ch1.com",
+			},
+		}
+
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				var hu urlutil.HTTPURL
+				err := hu.UnmarshalJSON(tc.in)
 				require.NoError(t, err)
 				require.Equal(t, tc.want, hu.String())
 			})
