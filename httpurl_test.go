@@ -3,7 +3,7 @@ package urlutil_test
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"net/url"
 	"testing"
@@ -17,8 +17,8 @@ func TestHTTPURL(t *testing.T) {
 	require.Implements(t, (*fmt.Stringer)(nil), &hu)
 	require.Implements(t, (*driver.Valuer)(nil), &hu)
 	require.Implements(t, (*sql.Scanner)(nil), &hu)
-	require.Implements(t, (*json.Marshaler)(nil), &hu)
-	require.Implements(t, (*json.Unmarshaler)(nil), &hu)
+	require.Implements(t, (*json.MarshalerTo)(nil), &hu)
+	require.Implements(t, (*json.UnmarshalerFrom)(nil), &hu)
 }
 
 func TestNewHTTPURL(t *testing.T) {
@@ -31,12 +31,12 @@ func TestNewHTTPURL(t *testing.T) {
 			{
 				"nil",
 				nil,
-				"invalid url.URL: nil",
+				"invalid url: nil",
 			},
 			{
 				"invalid host: empty",
 				&url.URL{},
-				"invalid url.URL: invalid host: empty",
+				"invalid url: invalid host: empty",
 			},
 			{
 				"invalid scheme: ftp",
@@ -44,7 +44,7 @@ func TestNewHTTPURL(t *testing.T) {
 					Scheme: "ftp",
 					Host:   "m0t0k1ch1.com",
 				},
-				"invalid url.URL: invalid scheme: must be http or https",
+				"invalid url: invalid scheme: must be http or https",
 			},
 		}
 
@@ -116,7 +116,7 @@ func TestMustNewHTTPURL(t *testing.T) {
 			{
 				"nil",
 				nil,
-				"invalid url.URL: nil",
+				"invalid url: nil",
 			},
 		}
 
@@ -353,12 +353,12 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"string: invalid url.URL: invalid host: empty",
 				"http://",
-				"invalid source: invalid url.URL: invalid host: empty",
+				"invalid source: invalid url: invalid host: empty",
 			},
 			{
 				"string: invalid url.URL: invalid scheme: ftp",
 				"ftp://m0t0k1ch1.com",
-				"invalid source: invalid url.URL: invalid scheme: must be http or https",
+				"invalid source: invalid url: invalid scheme: must be http or https",
 			},
 		}
 
@@ -400,7 +400,7 @@ func TestHTTPURL_Scan(t *testing.T) {
 	})
 }
 
-func TestHTTPURL_MarshalJSON(t *testing.T) {
+func TestHTTPURL_MarshalJSONTo(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		tcs := []struct {
 			name string
@@ -421,7 +421,7 @@ func TestHTTPURL_MarshalJSON(t *testing.T) {
 
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
-				b, err := tc.in.MarshalJSON()
+				b, err := json.Marshal(tc.in)
 				require.NoError(t, err)
 				require.Equal(t, tc.want, b)
 			})
@@ -429,7 +429,7 @@ func TestHTTPURL_MarshalJSON(t *testing.T) {
 	})
 }
 
-func TestHTTPURL_UnmarshalJSON(t *testing.T) {
+func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 	t.Run("failure", func(t *testing.T) {
 		tcs := []struct {
 			name string
@@ -439,12 +439,12 @@ func TestHTTPURL_UnmarshalJSON(t *testing.T) {
 			{
 				"empty",
 				[]byte{},
-				"invalid json value: empty",
+				"",
 			},
 			{
 				"null",
 				[]byte(`null`),
-				"invalid json value: null",
+				"invalid url string: empty",
 			},
 			{
 				"bool",
@@ -454,29 +454,29 @@ func TestHTTPURL_UnmarshalJSON(t *testing.T) {
 			{
 				"string: empty",
 				[]byte(`""`),
-				"invalid json string: invalid url string: empty",
+				"invalid url string: empty",
 			},
 			{
 				"string: missing scheme",
 				[]byte(`"://m0t0k1ch1.com"`),
-				"invalid json string: invalid url string",
+				"invalid url string",
 			},
 			{
 				"string: invalid host: empty",
 				[]byte(`"http://"`),
-				"invalid json string: invalid url.URL: invalid host: empty",
+				"invalid url: invalid host: empty",
 			},
 			{
 				"string: invalid scheme: ftp",
 				[]byte(`"ftp://m0t0k1ch1.com"`),
-				"invalid json string: invalid url.URL: invalid scheme: must be http or https",
+				"invalid url: invalid scheme: must be http or https",
 			},
 		}
 
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
 				var hu urlutil.HTTPURL
-				err := hu.UnmarshalJSON(tc.in)
+				err := json.Unmarshal(tc.in, &hu)
 				require.ErrorContains(t, err, tc.want)
 			})
 		}
@@ -503,7 +503,7 @@ func TestHTTPURL_UnmarshalJSON(t *testing.T) {
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
 				var hu urlutil.HTTPURL
-				err := hu.UnmarshalJSON(tc.in)
+				err := json.Unmarshal(tc.in, &hu)
 				require.NoError(t, err)
 				require.Equal(t, tc.want, hu.String())
 			})

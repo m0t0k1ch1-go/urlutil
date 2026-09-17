@@ -2,7 +2,8 @@ package urlutil
 
 import (
 	"database/sql/driver"
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"net/url"
@@ -35,13 +36,13 @@ func MustNewHTTPURL(u *url.URL) HTTPURL {
 
 func (hu *HTTPURL) setURL(u *url.URL) error {
 	if u == nil {
-		return errors.New("invalid url.URL: nil")
+		return errors.New("invalid url: nil")
 	}
 	if u.Host == "" {
-		return errors.New("invalid url.URL: invalid host: empty")
+		return errors.New("invalid url: invalid host: empty")
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("invalid url.URL: invalid scheme: must be http or https")
+		return errors.New("invalid url: invalid scheme: must be http or https")
 	}
 
 	hu.u = *u
@@ -127,30 +128,19 @@ func (hu *HTTPURL) Scan(src any) error {
 	return nil
 }
 
-// MarshalJSON implements json.Marshaler.
-// It returns the value as a JSON string.
-func (hu HTTPURL) MarshalJSON() ([]byte, error) {
-	return json.Marshal(hu.String())
+// MarshalJSONTo implements [json.MarshalerTo].
+// It encodes the value as a JSON string.
+func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
+	return json.MarshalEncode(enc, hu.String())
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
+// UnmarshalJSONFrom implements [json.UnmarshalerFrom].
 // It accepts a JSON string.
-func (hu *HTTPURL) UnmarshalJSON(b []byte) error {
-	if len(b) == 0 {
-		return errors.New("invalid json value: empty")
-	}
-	if string(b) == "null" {
-		return errors.New("invalid json value: null")
-	}
-
+func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	var s string
-	if err := json.Unmarshal(b, &s); err != nil {
+	if err := json.UnmarshalDecode(dec, &s); err != nil {
 		return fmt.Errorf("invalid json string: %w", err)
 	}
 
-	if err := hu.setString(s); err != nil {
-		return fmt.Errorf("invalid json string: %w", err)
-	}
-
-	return nil
+	return hu.setString(s)
 }
