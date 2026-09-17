@@ -21,12 +21,12 @@ var (
 	_ json.Unmarshaler     = (*HTTPURL)(nil)
 )
 
-// HTTPURL represents a HTTP(S) URL.
+// HTTPURL represents an HTTP(S) URL.
 type HTTPURL struct {
 	u url.URL
 }
 
-// NewHTTPURL returns a new [HTTPURL].
+// NewHTTPURL returns a new [HTTPURL] from a [url.URL].
 func NewHTTPURL(u *url.URL) (HTTPURL, error) {
 	var hu HTTPURL
 	if err := hu.setURL(u); err != nil {
@@ -101,19 +101,19 @@ func (hu HTTPURL) URL() *url.URL {
 }
 
 // String implements [fmt.Stringer].
-// It returns the value as a string.
+// It returns the [HTTPURL] as a string.
 func (hu HTTPURL) String() string {
 	return hu.u.String()
 }
 
 // Value implements [driver.Valuer].
-// It returns the value as a string.
+// It returns the [HTTPURL] as a string.
 func (hu HTTPURL) Value() (driver.Value, error) {
 	return hu.String(), nil
 }
 
 // Scan implements [sql.Scanner].
-// It accepts a string or []byte.
+// It scans a string or []byte into the [HTTPURL].
 func (hu *HTTPURL) Scan(src any) error {
 	if src == nil {
 		return errors.New("invalid source: nil")
@@ -135,13 +135,13 @@ func (hu *HTTPURL) Scan(src any) error {
 }
 
 // MarshalJSONTo implements [json.MarshalerTo].
-// It encodes the value as a JSON string.
+// It encodes the [HTTPURL] as a JSON string.
 func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return json.MarshalEncode(enc, hu.String())
 }
 
 // MarshalJSON implements [json.Marshaler].
-// It encodes the value as a JSON string.
+// It encodes the [HTTPURL] as a JSON string.
 func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	if err := hu.MarshalJSONTo(jsontext.NewEncoder(&buf)); err != nil {
@@ -152,7 +152,7 @@ func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
-// It accepts a JSON string.
+// It decodes a JSON string into the [HTTPURL].
 func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	if dec.PeekKind() == jsontext.KindNull {
 		return errors.New("invalid json string: null")
@@ -167,7 +167,7 @@ func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 }
 
 // UnmarshalJSON implements [json.Unmarshaler].
-// It accepts a JSON string.
+// It decodes a JSON string into the [HTTPURL].
 func (hu *HTTPURL) UnmarshalJSON(b []byte) error {
 	return hu.UnmarshalJSONFrom(jsontext.NewDecoder(bytes.NewReader(b)))
 }
