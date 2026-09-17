@@ -135,6 +135,10 @@ func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
 // It accepts a JSON string.
 func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	if dec.PeekKind() == jsontext.KindNull {
+		return errors.New("invalid json string: null")
+	}
+
 	var s string
 	if err := json.UnmarshalDecode(dec, &s); err != nil {
 		return fmt.Errorf("invalid json string: %w", err)
