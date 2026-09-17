@@ -94,13 +94,13 @@ func (hu HTTPURL) String() string {
 	return hu.u.String()
 }
 
-// Value implements driver.Valuer.
+// Value implements [driver.Valuer].
 // It returns the value as a string.
 func (hu HTTPURL) Value() (driver.Value, error) {
 	return hu.String(), nil
 }
 
-// Scan implements sql.Scanner.
+// Scan implements [sql.Scanner].
 // It accepts a string or []byte.
 func (hu *HTTPURL) Scan(src any) error {
 	if src == nil {
@@ -109,21 +109,17 @@ func (hu *HTTPURL) Scan(src any) error {
 
 	var s string
 	{
-		switch v := src.(type) {
+		switch src := src.(type) {
 		case string:
-			s = v
+			s = src
 		case []byte:
-			s = string(v)
+			s = string(src)
 		default:
 			return fmt.Errorf("unsupported source type: %T", src)
 		}
 	}
 
-	if err := hu.setString(s); err != nil {
-		return fmt.Errorf("invalid source: %w", err)
-	}
-
-	return nil
+	return hu.setString(s)
 }
 
 // MarshalJSONTo implements [json.MarshalerTo].

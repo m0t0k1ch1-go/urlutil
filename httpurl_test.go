@@ -343,22 +343,22 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"string: empty",
 				"",
-				"invalid source: invalid url string: empty",
+				"invalid url string: empty",
 			},
 			{
 				"string: missing scheme",
 				"://m0t0k1ch1.com",
-				"invalid source: invalid url string",
+				"invalid url string",
 			},
 			{
 				"string: invalid url.URL: invalid host: empty",
 				"http://",
-				"invalid source: invalid url: invalid host: empty",
+				"invalid url: invalid host: empty",
 			},
 			{
 				"string: invalid url.URL: invalid scheme: ftp",
 				"ftp://m0t0k1ch1.com",
-				"invalid source: invalid url: invalid scheme: must be http or https",
+				"invalid url: invalid scheme: must be http or https",
 			},
 		}
 
