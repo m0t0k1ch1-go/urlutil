@@ -444,7 +444,7 @@ func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 			{
 				"null",
 				[]byte(`null`),
-				"invalid url string: empty",
+				"invalid json string: null",
 			},
 			{
 				"bool",
