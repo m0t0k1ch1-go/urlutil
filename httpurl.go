@@ -14,7 +14,7 @@ type HTTPURL struct {
 	u url.URL
 }
 
-// NewHTTPURL returns a new HTTPURL.
+// NewHTTPURL returns a new [HTTPURL].
 func NewHTTPURL(u *url.URL) (HTTPURL, error) {
 	var hu HTTPURL
 	if err := hu.setURL(u); err != nil {
@@ -24,7 +24,7 @@ func NewHTTPURL(u *url.URL) (HTTPURL, error) {
 	return hu, nil
 }
 
-// MustNewHTTPURL panics if the input is invalid.
+// MustNewHTTPURL is like [NewHTTPURL] but panics if the input is invalid.
 func MustNewHTTPURL(u *url.URL) HTTPURL {
 	hu, err := NewHTTPURL(u)
 	if err != nil {
@@ -50,7 +50,7 @@ func (hu *HTTPURL) setURL(u *url.URL) error {
 	return nil
 }
 
-// NewHTTPURLFromString returns a new HTTPURL from a string.
+// NewHTTPURLFromString returns a new [HTTPURL] from a string.
 func NewHTTPURLFromString(s string) (HTTPURL, error) {
 	var hu HTTPURL
 	if err := hu.setString(s); err != nil {
@@ -60,7 +60,7 @@ func NewHTTPURLFromString(s string) (HTTPURL, error) {
 	return hu, nil
 }
 
-// MustNewHTTPURLFromString panics if the input is invalid.
+// MustNewHTTPURLFromString is like [NewHTTPURLFromString] but panics if the input is invalid.
 func MustNewHTTPURLFromString(s string) HTTPURL {
 	hu, err := NewHTTPURLFromString(s)
 	if err != nil {
@@ -88,7 +88,7 @@ func (hu HTTPURL) URL() *url.URL {
 	return hu.u.Clone()
 }
 
-// String implements fmt.Stringer.
+// String implements [fmt.Stringer].
 // It returns the value as a string.
 func (hu HTTPURL) String() string {
 	return hu.u.String()
