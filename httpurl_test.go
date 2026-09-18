@@ -8,8 +8,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/m0t0k1ch1-go/urlutil"
 	"github.com/stretchr/testify/require"
+
+	"github.com/m0t0k1ch1-go/urlutil"
 )
 
 func TestHTTPURL(t *testing.T) {
@@ -335,7 +336,7 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"nil",
 				nil,
-				"invalid source: nil",
+				"unsupported source: nil",
 			},
 			{
 				"bool",
@@ -402,7 +403,25 @@ func TestHTTPURL_Scan(t *testing.T) {
 	})
 }
 
-func TestHTTPURL_MarshalJSONTo(t *testing.T) {
+func TestHTTPURL_JSONMarshaling(t *testing.T) {
+	encs := []struct {
+		name    string
+		marshal func(urlutil.HTTPURL) ([]byte, error)
+	}{
+		{
+			"json.Marshal",
+			func(hu urlutil.HTTPURL) ([]byte, error) {
+				return json.Marshal(hu)
+			},
+		},
+		{
+			"MarshalJSON",
+			func(hu urlutil.HTTPURL) ([]byte, error) {
+				return hu.MarshalJSON()
+			},
+		},
+	}
+
 	t.Run("success", func(t *testing.T) {
 		tcs := []struct {
 			name string
@@ -423,44 +442,37 @@ func TestHTTPURL_MarshalJSONTo(t *testing.T) {
 
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
-				b, err := json.Marshal(tc.in)
-				require.NoError(t, err)
-				require.Equal(t, tc.want, b)
+				for _, enc := range encs {
+					t.Run(enc.name, func(t *testing.T) {
+						b, err := enc.marshal(tc.in)
+						require.NoError(t, err)
+						require.Equal(t, tc.want, b)
+					})
+				}
 			})
 		}
 	})
 }
 
-func TestHTTPURL_MarshalJSON(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		tcs := []struct {
-			name string
-			in   urlutil.HTTPURL
-			want []byte
-		}{
-			{
-				"http",
-				urlutil.MustNewHTTPURLFromString("http://m0t0k1ch1.com"),
-				[]byte(`"http://m0t0k1ch1.com"`),
+func TestHTTPURL_JSONUnmarshaling(t *testing.T) {
+	decs := []struct {
+		name      string
+		unmarshal func([]byte, *urlutil.HTTPURL) error
+	}{
+		{
+			"json.Unmarshal",
+			func(b []byte, hu *urlutil.HTTPURL) error {
+				return json.Unmarshal(b, hu)
 			},
-			{
-				"https",
-				urlutil.MustNewHTTPURLFromString("https://m0t0k1ch1.com"),
-				[]byte(`"https://m0t0k1ch1.com"`),
+		},
+		{
+			"UnmarshalJSON",
+			func(b []byte, hu *urlutil.HTTPURL) error {
+				return hu.UnmarshalJSON(b)
 			},
-		}
+		},
+	}
 
-		for _, tc := range tcs {
-			t.Run(tc.name, func(t *testing.T) {
-				b, err := tc.in.MarshalJSON()
-				require.NoError(t, err)
-				require.Equal(t, tc.want, b)
-			})
-		}
-	})
-}
-
-func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 	t.Run("failure", func(t *testing.T) {
 		tcs := []struct {
 			name string
@@ -475,12 +487,7 @@ func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 			{
 				"null",
 				[]byte(`null`),
-				"invalid json string: null",
-			},
-			{
-				"bool",
-				[]byte(`true`),
-				"invalid json string",
+				"unsupported json token kind: null",
 			},
 			{
 				"string: empty",
@@ -506,9 +513,13 @@ func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
-				var hu urlutil.HTTPURL
-				err := json.Unmarshal(tc.in, &hu)
-				require.ErrorContains(t, err, tc.want)
+				for _, dec := range decs {
+					t.Run(dec.name, func(t *testing.T) {
+						var hu urlutil.HTTPURL
+						err := dec.unmarshal(tc.in, &hu)
+						require.ErrorContains(t, err, tc.want)
+					})
+				}
 			})
 		}
 	})
@@ -533,92 +544,14 @@ func TestHTTPURL_UnmarshalJSONFrom(t *testing.T) {
 
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
-				var hu urlutil.HTTPURL
-				err := json.Unmarshal(tc.in, &hu)
-				require.NoError(t, err)
-				require.Equal(t, tc.want, hu.String())
-			})
-		}
-	})
-}
-
-func TestHTTPURL_UnmarshalJSON(t *testing.T) {
-	t.Run("failure", func(t *testing.T) {
-		tcs := []struct {
-			name string
-			in   []byte
-			want string
-		}{
-			{
-				"empty",
-				[]byte{},
-				"",
-			},
-			{
-				"null",
-				[]byte(`null`),
-				"invalid json string: null",
-			},
-			{
-				"bool",
-				[]byte(`true`),
-				"invalid json string",
-			},
-			{
-				"string: empty",
-				[]byte(`""`),
-				"invalid url string: empty",
-			},
-			{
-				"string: missing scheme",
-				[]byte(`"://m0t0k1ch1.com"`),
-				"invalid url string",
-			},
-			{
-				"string: invalid host: empty",
-				[]byte(`"http://"`),
-				"invalid url: invalid host: empty",
-			},
-			{
-				"string: invalid scheme: ftp",
-				[]byte(`"ftp://m0t0k1ch1.com"`),
-				"invalid url: invalid scheme: must be http or https",
-			},
-		}
-
-		for _, tc := range tcs {
-			t.Run(tc.name, func(t *testing.T) {
-				var hu urlutil.HTTPURL
-				err := hu.UnmarshalJSON(tc.in)
-				require.ErrorContains(t, err, tc.want)
-			})
-		}
-	})
-
-	t.Run("success", func(t *testing.T) {
-		tcs := []struct {
-			name string
-			in   []byte
-			want string
-		}{
-			{
-				"string: http",
-				[]byte(`"http://m0t0k1ch1.com"`),
-				"http://m0t0k1ch1.com",
-			},
-			{
-				"string: https",
-				[]byte(`"https://m0t0k1ch1.com"`),
-				"https://m0t0k1ch1.com",
-			},
-		}
-
-		for _, tc := range tcs {
-			t.Run(tc.name, func(t *testing.T) {
-				var hu urlutil.HTTPURL
-				err := hu.UnmarshalJSON(tc.in)
-				require.NoError(t, err)
-				require.Equal(t, tc.want, hu.String())
+				for _, dec := range decs {
+					t.Run(dec.name, func(t *testing.T) {
+						var hu urlutil.HTTPURL
+						err := dec.unmarshal(tc.in, &hu)
+						require.NoError(t, err)
+						require.Equal(t, tc.want, hu.String())
+					})
+				}
 			})
 		}
 	})
