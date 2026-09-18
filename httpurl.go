@@ -1,7 +1,6 @@
 package urlutil
 
 import (
-	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json/jsontext"
@@ -143,22 +142,17 @@ func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
 // MarshalJSON implements [json.Marshaler].
 // It is like [HTTPURL.MarshalJSONTo] but returns the encoded bytes instead of writing them to a [jsontext.Encoder].
 func (hu HTTPURL) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	if err := hu.MarshalJSONTo(jsontext.NewEncoder(&buf)); err != nil {
-		return nil, err
-	}
-
-	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
+	return json.Marshal(hu.String())
 }
 
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
-// It decodes a JSON string from dec into hu.
+// It decodes a quoted string from dec into hu.
 func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	switch k := dec.PeekKind(); k {
 	case jsontext.KindString:
 		var s string
 		if err := json.UnmarshalDecode(dec, &s); err != nil {
-			return fmt.Errorf("invalid json string: %w", err)
+			return fmt.Errorf("invalid string: %w", err)
 		}
 
 		return hu.setString(s)
@@ -171,5 +165,5 @@ func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 // UnmarshalJSON implements [json.Unmarshaler].
 // It is like [HTTPURL.UnmarshalJSONFrom] but decodes b instead of reading from a [jsontext.Decoder].
 func (hu *HTTPURL) UnmarshalJSON(b []byte) error {
-	return hu.UnmarshalJSONFrom(jsontext.NewDecoder(bytes.NewReader(b)))
+	return json.Unmarshal(b, hu)
 }
