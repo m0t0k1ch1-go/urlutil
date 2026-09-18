@@ -116,7 +116,7 @@ func (hu HTTPURL) Value() (driver.Value, error) {
 // It decodes a string or []byte into hu.
 func (hu *HTTPURL) Scan(src any) error {
 	if src == nil {
-		return errors.New("invalid source: nil")
+		return errors.New("unsupported source: nil")
 	}
 
 	var s string
@@ -154,16 +154,18 @@ func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
 // It decodes a JSON string from dec into hu.
 func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
-	if dec.PeekKind() == jsontext.KindNull {
-		return errors.New("invalid json string: null")
-	}
+	switch k := dec.PeekKind(); k {
+	case jsontext.KindString:
+		var s string
+		if err := json.UnmarshalDecode(dec, &s); err != nil {
+			return fmt.Errorf("invalid json string: %w", err)
+		}
 
-	var s string
-	if err := json.UnmarshalDecode(dec, &s); err != nil {
-		return fmt.Errorf("invalid json string: %w", err)
-	}
+		return hu.setString(s)
 
-	return hu.setString(s)
+	default:
+		return fmt.Errorf("unsupported json token kind: %v", k)
+	}
 }
 
 // UnmarshalJSON implements [json.Unmarshaler].
