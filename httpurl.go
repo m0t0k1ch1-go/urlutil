@@ -3,6 +3,7 @@ package urlutil
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
@@ -11,13 +12,15 @@ import (
 )
 
 var (
-	_ fmt.Stringer         = HTTPURL{}
-	_ driver.Valuer        = HTTPURL{}
-	_ sql.Scanner          = (*HTTPURL)(nil)
-	_ json.MarshalerTo     = HTTPURL{}
-	_ json.Marshaler       = HTTPURL{}
-	_ json.UnmarshalerFrom = (*HTTPURL)(nil)
-	_ json.Unmarshaler     = (*HTTPURL)(nil)
+	_ fmt.Stringer             = HTTPURL{}
+	_ driver.Valuer            = HTTPURL{}
+	_ sql.Scanner              = &HTTPURL{}
+	_ encoding.TextMarshaler   = HTTPURL{}
+	_ json.MarshalerTo         = HTTPURL{}
+	_ json.Marshaler           = HTTPURL{}
+	_ encoding.TextUnmarshaler = &HTTPURL{}
+	_ json.UnmarshalerFrom     = &HTTPURL{}
+	_ json.Unmarshaler         = &HTTPURL{}
 )
 
 // HTTPURL represents an HTTP(S) URL.
@@ -133,16 +136,30 @@ func (hu *HTTPURL) Scan(src any) error {
 	return hu.setString(s)
 }
 
+// MarshalText implements [encoding.TextMarshaler].
+// It encodes hu as a string.
+func (hu HTTPURL) MarshalText() ([]byte, error) {
+	return []byte(hu.String()), nil
+}
+
 // MarshalJSONTo implements [json.MarshalerTo].
 // It encodes hu as a quoted string and writes it to enc.
 func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
-	return json.MarshalEncode(enc, hu.String())
+	b, _ := hu.MarshalText()
+
+	return json.MarshalEncode(enc, string(b))
 }
 
 // MarshalJSON implements [json.Marshaler].
 // It is like [HTTPURL.MarshalJSONTo] but returns the encoded bytes instead of writing them to a [jsontext.Encoder].
 func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 	return json.Marshal(hu.String())
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+// It decodes a string into hu.
+func (hu *HTTPURL) UnmarshalText(text []byte) error {
+	return hu.setString(string(text))
 }
 
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
@@ -155,7 +172,7 @@ func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 			return fmt.Errorf("invalid string: %w", err)
 		}
 
-		return hu.setString(s)
+		return hu.UnmarshalText([]byte(s))
 
 	default:
 		return fmt.Errorf("unsupported json token kind: %v", k)
