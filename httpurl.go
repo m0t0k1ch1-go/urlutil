@@ -101,19 +101,19 @@ func (hu HTTPURL) URL() *url.URL {
 }
 
 // String implements [fmt.Stringer].
-// It returns the [HTTPURL] as a string.
+// It encodes hu as a string.
 func (hu HTTPURL) String() string {
 	return hu.u.String()
 }
 
 // Value implements [driver.Valuer].
-// It returns the [HTTPURL] as a string.
+// It encodes hu as a string.
 func (hu HTTPURL) Value() (driver.Value, error) {
 	return hu.String(), nil
 }
 
 // Scan implements [sql.Scanner].
-// It scans a string or []byte into the [HTTPURL].
+// It decodes a string or []byte into hu.
 func (hu *HTTPURL) Scan(src any) error {
 	if src == nil {
 		return errors.New("invalid source: nil")
@@ -135,13 +135,13 @@ func (hu *HTTPURL) Scan(src any) error {
 }
 
 // MarshalJSONTo implements [json.MarshalerTo].
-// It encodes the [HTTPURL] as a JSON string.
+// It encodes hu as a quoted string and writes it to enc.
 func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return json.MarshalEncode(enc, hu.String())
 }
 
 // MarshalJSON implements [json.Marshaler].
-// It encodes the [HTTPURL] as a JSON string.
+// It is like [HTTPURL.MarshalJSONTo] but returns the encoded bytes instead of writing them to a [jsontext.Encoder].
 func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	if err := hu.MarshalJSONTo(jsontext.NewEncoder(&buf)); err != nil {
@@ -152,7 +152,7 @@ func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
-// It decodes a JSON string into the [HTTPURL].
+// It decodes a JSON string from dec into hu.
 func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	if dec.PeekKind() == jsontext.KindNull {
 		return errors.New("invalid json string: null")
@@ -167,7 +167,7 @@ func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 }
 
 // UnmarshalJSON implements [json.Unmarshaler].
-// It decodes a JSON string into the [HTTPURL].
+// It is like [HTTPURL.UnmarshalJSONFrom] but decodes b instead of reading from a [jsontext.Decoder].
 func (hu *HTTPURL) UnmarshalJSON(b []byte) error {
 	return hu.UnmarshalJSONFrom(jsontext.NewDecoder(bytes.NewReader(b)))
 }
