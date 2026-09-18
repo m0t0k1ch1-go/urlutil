@@ -3,6 +3,7 @@ package urlutil_test
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding"
 	"encoding/json/v2"
 	"fmt"
 	"net/url"
@@ -18,8 +19,10 @@ func TestHTTPURL(t *testing.T) {
 	require.Implements(t, (*fmt.Stringer)(nil), &hu)
 	require.Implements(t, (*driver.Valuer)(nil), &hu)
 	require.Implements(t, (*sql.Scanner)(nil), &hu)
+	require.Implements(t, (*encoding.TextMarshaler)(nil), &hu)
 	require.Implements(t, (*json.MarshalerTo)(nil), &hu)
 	require.Implements(t, (*json.Marshaler)(nil), &hu)
+	require.Implements(t, (*encoding.TextUnmarshaler)(nil), &hu)
 	require.Implements(t, (*json.UnmarshalerFrom)(nil), &hu)
 	require.Implements(t, (*json.Unmarshaler)(nil), &hu)
 }
