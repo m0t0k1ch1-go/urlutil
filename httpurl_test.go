@@ -8,8 +8,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/m0t0k1ch1-go/urlutil"
 	"github.com/stretchr/testify/require"
+
+	"github.com/m0t0k1ch1-go/urlutil"
 )
 
 func TestHTTPURL(t *testing.T) {
