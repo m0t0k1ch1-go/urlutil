@@ -145,9 +145,7 @@ func (hu HTTPURL) MarshalText() ([]byte, error) {
 // MarshalJSONTo implements [json.MarshalerTo].
 // It encodes hu as a quoted string and writes it to enc.
 func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
-	b, _ := hu.MarshalText()
-
-	return json.MarshalEncode(enc, string(b))
+	return json.MarshalEncode(enc, hu.String())
 }
 
 // MarshalJSON implements [json.Marshaler].
