@@ -151,7 +151,7 @@ func (hu HTTPURL) MarshalJSONTo(enc *jsontext.Encoder) error {
 // MarshalJSON implements [json.Marshaler].
 // It is like [HTTPURL.MarshalJSONTo] but returns the encoded bytes instead of writing them to a [jsontext.Encoder].
 func (hu HTTPURL) MarshalJSON() ([]byte, error) {
-	return json.Marshal(hu.String())
+	return json.Marshal(hu)
 }
 
 // UnmarshalText implements [encoding.TextUnmarshaler].
