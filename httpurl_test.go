@@ -349,22 +349,27 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"string: empty",
 				"",
-				"invalid url string: empty",
+				"invalid string source: empty",
 			},
 			{
 				"string: missing scheme",
 				"://m0t0k1ch1.com",
-				"invalid url string",
+				"invalid string source",
 			},
 			{
 				"string: invalid url.URL: invalid host: empty",
 				"http://",
-				"invalid url: invalid host: empty",
+				"invalid string source: invalid host: empty",
 			},
 			{
 				"string: invalid url.URL: invalid scheme: ftp",
 				"ftp://m0t0k1ch1.com",
-				"invalid url: invalid scheme: must be http or https",
+				"invalid string source: invalid scheme: must be http or https",
+			},
+			{
+				"bytes: empty",
+				[]byte{},
+				"invalid bytes source: empty",
 			},
 		}
 
@@ -506,22 +511,22 @@ func TestHTTPURL_UnmarshalText(t *testing.T) {
 			{
 				"string bytes: empty",
 				[]byte(""),
-				"invalid url string: empty",
+				"invalid string: empty",
 			},
 			{
 				"string bytes: missing scheme",
 				[]byte("://m0t0k1ch1.com"),
-				"invalid url string",
+				"invalid string",
 			},
 			{
 				"string bytes: invalid host: empty",
 				[]byte("http://"),
-				"invalid url: invalid host: empty",
+				"invalid string: invalid host: empty",
 			},
 			{
 				"string bytes: invalid scheme",
 				[]byte("ftp://m0t0k1ch1.com"),
-				"invalid url: invalid scheme: must be http or https",
+				"invalid string: invalid scheme: must be http or https",
 			},
 		}
 
@@ -606,22 +611,22 @@ func TestHTTPURL_JSONUnmarshaling(t *testing.T) {
 			{
 				"quoted string bytes: empty",
 				[]byte(`""`),
-				"invalid url string: empty",
+				"invalid string: empty",
 			},
 			{
 				"quoted string bytes: missing scheme",
 				[]byte(`"://m0t0k1ch1.com"`),
-				"invalid url string",
+				"invalid string",
 			},
 			{
 				"quoted string bytes: invalid host: empty",
 				[]byte(`"http://"`),
-				"invalid url: invalid host: empty",
+				"invalid string: invalid host: empty",
 			},
 			{
 				"quoted string bytes: invalid scheme",
 				[]byte(`"ftp://m0t0k1ch1.com"`),
-				"invalid url: invalid scheme: must be http or https",
+				"invalid string: invalid scheme: must be http or https",
 			},
 		}
 
