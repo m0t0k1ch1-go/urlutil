@@ -48,22 +48,6 @@ func MustNewHTTPURL(u *url.URL) HTTPURL {
 	return hu
 }
 
-func (hu *HTTPURL) setURL(u *url.URL) error {
-	if u == nil {
-		return errors.New("nil")
-	}
-	if u.Host == "" {
-		return errors.New("invalid host: empty")
-	}
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("invalid scheme: must be http or https")
-	}
-
-	hu.u = *u
-
-	return nil
-}
-
 // NewHTTPURLFromString returns a new [HTTPURL] from a string.
 func NewHTTPURLFromString(s string) (HTTPURL, error) {
 	var hu HTTPURL
@@ -82,6 +66,22 @@ func MustNewHTTPURLFromString(s string) HTTPURL {
 	}
 
 	return hu
+}
+
+func (hu *HTTPURL) setURL(u *url.URL) error {
+	if u == nil {
+		return errors.New("nil")
+	}
+	if u.Host == "" {
+		return errors.New("invalid host: empty")
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return errors.New("invalid scheme: must be http or https")
+	}
+
+	hu.u = *u
+
+	return nil
 }
 
 func (hu *HTTPURL) setString(s string) error {
