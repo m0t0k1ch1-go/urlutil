@@ -32,7 +32,7 @@ type HTTPURL struct {
 func NewHTTPURL(u *url.URL) (HTTPURL, error) {
 	var hu HTTPURL
 	if err := hu.setURL(u); err != nil {
-		return HTTPURL{}, err
+		return HTTPURL{}, fmt.Errorf("invalid url: %w", err)
 	}
 
 	return hu, nil
@@ -50,13 +50,13 @@ func MustNewHTTPURL(u *url.URL) HTTPURL {
 
 func (hu *HTTPURL) setURL(u *url.URL) error {
 	if u == nil {
-		return errors.New("invalid url: nil")
+		return errors.New("nil")
 	}
 	if u.Host == "" {
-		return errors.New("invalid url: invalid host: empty")
+		return errors.New("invalid host: empty")
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("invalid url: invalid scheme: must be http or https")
+		return errors.New("invalid scheme: must be http or https")
 	}
 
 	hu.u = *u
@@ -68,7 +68,7 @@ func (hu *HTTPURL) setURL(u *url.URL) error {
 func NewHTTPURLFromString(s string) (HTTPURL, error) {
 	var hu HTTPURL
 	if err := hu.setString(s); err != nil {
-		return HTTPURL{}, err
+		return HTTPURL{}, fmt.Errorf("invalid url string: %w", err)
 	}
 
 	return hu, nil
@@ -86,12 +86,12 @@ func MustNewHTTPURLFromString(s string) HTTPURL {
 
 func (hu *HTTPURL) setString(s string) error {
 	if len(s) == 0 {
-		return errors.New("invalid url string: empty")
+		return errors.New("empty")
 	}
 
 	u, err := url.Parse(s)
 	if err != nil {
-		return fmt.Errorf("invalid url string: %w", err)
+		return err
 	}
 
 	return hu.setURL(u)
@@ -121,19 +121,24 @@ func (hu *HTTPURL) Scan(src any) error {
 		return errors.New("unsupported source: nil")
 	}
 
-	var s string
-	{
-		switch src := src.(type) {
-		case string:
-			s = src
-		case []byte:
-			s = string(src)
-		default:
-			return fmt.Errorf("unsupported source type: %T", src)
+	switch src := src.(type) {
+	case string:
+		if err := hu.setString(src); err != nil {
+			return fmt.Errorf("invalid string source: %w", err)
 		}
-	}
 
-	return hu.setString(s)
+		return nil
+
+	case []byte:
+		if err := hu.setString(string(src)); err != nil {
+			return fmt.Errorf("invalid bytes source: %w", err)
+		}
+
+		return nil
+
+	default:
+		return fmt.Errorf("unsupported source type: %T", src)
+	}
 }
 
 // MarshalText implements [encoding.TextMarshaler].
@@ -157,7 +162,11 @@ func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 // UnmarshalText implements [encoding.TextUnmarshaler].
 // It decodes a string into hu.
 func (hu *HTTPURL) UnmarshalText(text []byte) error {
-	return hu.setString(string(text))
+	if err := hu.setString(string(text)); err != nil {
+		return fmt.Errorf("invalid string: %w", err)
+	}
+
+	return nil
 }
 
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom].
