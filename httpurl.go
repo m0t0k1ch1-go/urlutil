@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+
+	"go.yaml.in/yaml/v3"
 )
 
 var (
@@ -18,9 +20,11 @@ var (
 	_ encoding.TextMarshaler   = HTTPURL{}
 	_ json.MarshalerTo         = HTTPURL{}
 	_ json.Marshaler           = HTTPURL{}
+	_ yaml.Marshaler           = HTTPURL{}
 	_ encoding.TextUnmarshaler = &HTTPURL{}
 	_ json.UnmarshalerFrom     = &HTTPURL{}
 	_ json.Unmarshaler         = &HTTPURL{}
+	_ yaml.Unmarshaler         = &HTTPURL{}
 )
 
 // HTTPURL represents an HTTP(S) URL.
@@ -159,6 +163,12 @@ func (hu HTTPURL) MarshalJSON() ([]byte, error) {
 	return json.Marshal(hu)
 }
 
+// MarshalYAML implements [yaml.Marshaler].
+// It encodes hu as a string.
+func (hu HTTPURL) MarshalYAML() (any, error) {
+	return hu.String(), nil
+}
+
 // UnmarshalText implements [encoding.TextUnmarshaler].
 // It decodes a string into hu.
 func (hu *HTTPURL) UnmarshalText(text []byte) error {
@@ -190,4 +200,19 @@ func (hu *HTTPURL) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 // It is like [HTTPURL.UnmarshalJSONFrom] but decodes b instead of reading from a [jsontext.Decoder].
 func (hu *HTTPURL) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, hu)
+}
+
+// UnmarshalYAML implements [yaml.Unmarshaler].
+// It decodes a string from value into hu.
+func (hu *HTTPURL) UnmarshalYAML(value *yaml.Node) error {
+	var s string
+	if err := value.Decode(&s); err != nil {
+		return fmt.Errorf("invalid node: %w", err)
+	}
+
+	if err := hu.setString(s); err != nil {
+		return fmt.Errorf("invalid node: %w", err)
+	}
+
+	return nil
 }
