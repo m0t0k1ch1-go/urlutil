@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/m0t0k1ch1-go/urlutil"
 )
@@ -22,9 +23,11 @@ func TestHTTPURL(t *testing.T) {
 	require.Implements(t, (*encoding.TextMarshaler)(nil), &hu)
 	require.Implements(t, (*json.MarshalerTo)(nil), &hu)
 	require.Implements(t, (*json.Marshaler)(nil), &hu)
+	require.Implements(t, (*yaml.Marshaler)(nil), &hu)
 	require.Implements(t, (*encoding.TextUnmarshaler)(nil), &hu)
 	require.Implements(t, (*json.UnmarshalerFrom)(nil), &hu)
 	require.Implements(t, (*json.Unmarshaler)(nil), &hu)
+	require.Implements(t, (*yaml.Unmarshaler)(nil), &hu)
 }
 
 func TestNewHTTPURL(t *testing.T) {
@@ -491,6 +494,35 @@ func TestHTTPURL_JSONMarshaling(t *testing.T) {
 	})
 }
 
+func TestHTTPURL_YAMLMarshaling(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		tcs := []struct {
+			name string
+			in   urlutil.HTTPURL
+			want []byte
+		}{
+			{
+				"http",
+				urlutil.MustNewHTTPURLFromString("http://m0t0k1ch1.com"),
+				[]byte("http://m0t0k1ch1.com\n"),
+			},
+			{
+				"https",
+				urlutil.MustNewHTTPURLFromString("https://m0t0k1ch1.com"),
+				[]byte("https://m0t0k1ch1.com\n"),
+			},
+		}
+
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				b, err := yaml.Marshal(tc.in)
+				require.NoError(t, err)
+				require.Equal(t, tc.want, b)
+			})
+		}
+	})
+}
+
 func TestHTTPURL_UnmarshalText(t *testing.T) {
 	t.Run("failure", func(t *testing.T) {
 		tcs := []struct {
@@ -671,6 +703,103 @@ func TestHTTPURL_JSONUnmarshaling(t *testing.T) {
 						require.Equal(t, tc.want, hu.String())
 					})
 				}
+			})
+		}
+	})
+}
+
+func TestHTTPURL_YAMLUnmarshaling(t *testing.T) {
+	t.Run("failure", func(t *testing.T) {
+		tcs := []struct {
+			name string
+			in   []byte
+			want string
+		}{
+			{
+				"unquoted string bytes: sequence",
+				[]byte(`[]`),
+				"invalid node",
+			},
+			{
+				"unquoted string bytes: mapping",
+				[]byte(`{}`),
+				"invalid node",
+			},
+			{
+				"quoted string bytes: empty",
+				[]byte(`""`),
+				"invalid node: empty",
+			},
+			{
+				"quoted string bytes: missing scheme",
+				[]byte(`"://m0t0k1ch1.com"`),
+				"invalid node",
+			},
+			{
+				"quoted string bytes: invalid host: empty",
+				[]byte(`"http://"`),
+				"invalid node: invalid host: empty",
+			},
+			{
+				"quoted string bytes: invalid scheme",
+				[]byte(`"ftp://m0t0k1ch1.com"`),
+				"invalid node: invalid scheme: must be http or https",
+			},
+			{
+				"unquoted string bytes: invalid host: empty",
+				[]byte(`http://`),
+				"invalid node: invalid host: empty",
+			},
+			{
+				"unquoted string bytes: invalid scheme",
+				[]byte(`ftp://m0t0k1ch1.com`),
+				"invalid node: invalid scheme: must be http or https",
+			},
+		}
+
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				var hu urlutil.HTTPURL
+				err := yaml.Unmarshal(tc.in, &hu)
+				require.ErrorContains(t, err, tc.want)
+			})
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		tcs := []struct {
+			name string
+			in   []byte
+			want string
+		}{
+			{
+				"quoted string bytes: http",
+				[]byte(`"http://m0t0k1ch1.com"`),
+				"http://m0t0k1ch1.com",
+			},
+			{
+				"quoted string bytes: https",
+				[]byte(`"https://m0t0k1ch1.com"`),
+				"https://m0t0k1ch1.com",
+			},
+			{
+				"unquoted string bytes: http",
+				[]byte(`http://m0t0k1ch1.com`),
+				"http://m0t0k1ch1.com",
+			},
+			{
+				"unquoted string bytes: https",
+				[]byte(`https://m0t0k1ch1.com`),
+				"https://m0t0k1ch1.com",
+			},
+		}
+
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				var hu urlutil.HTTPURL
+				err := yaml.Unmarshal(tc.in, &hu)
+				require.NoError(t, err)
+				require.Equal(t, tc.want, hu.String())
 			})
 		}
 	})
