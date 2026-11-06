@@ -40,12 +40,12 @@ func TestNewHTTPURL(t *testing.T) {
 			{
 				"nil",
 				nil,
-				"invalid url: nil",
+				"invalid url: must not be nil",
 			},
 			{
 				"invalid host: empty",
 				&url.URL{},
-				"invalid url: invalid host: empty",
+				"invalid url: invalid host: must not be empty",
 			},
 			{
 				"invalid scheme: ftp",
@@ -125,7 +125,7 @@ func TestMustNewHTTPURL(t *testing.T) {
 			{
 				"nil",
 				nil,
-				"invalid url: nil",
+				"invalid url: must not be nil",
 			},
 		}
 
@@ -173,7 +173,7 @@ func TestNewHTTPURLFromString(t *testing.T) {
 			{
 				"empty",
 				"",
-				"invalid url string: empty",
+				"invalid url string: must not be empty",
 			},
 			{
 				"missing scheme",
@@ -228,7 +228,7 @@ func TestMustNewHTTPURLFromString(t *testing.T) {
 			{
 				"empty",
 				"",
-				"invalid url string: empty",
+				"invalid url string: must not be empty",
 			},
 		}
 
@@ -352,7 +352,7 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"string: empty",
 				"",
-				"invalid string source: empty",
+				"invalid string source: must not be empty",
 			},
 			{
 				"string: missing scheme",
@@ -362,7 +362,7 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"string: invalid host: empty",
 				"http://",
-				"invalid string source: invalid host: empty",
+				"invalid string source: invalid host: must not be empty",
 			},
 			{
 				"string: invalid scheme",
@@ -372,7 +372,7 @@ func TestHTTPURL_Scan(t *testing.T) {
 			{
 				"bytes: empty",
 				[]byte{},
-				"invalid bytes source: empty",
+				"invalid bytes source: must not be empty",
 			},
 		}
 
@@ -543,7 +543,7 @@ func TestHTTPURL_UnmarshalText(t *testing.T) {
 			{
 				"string bytes: empty",
 				[]byte(""),
-				"invalid string: empty",
+				"invalid string: must not be empty",
 			},
 			{
 				"string bytes: missing scheme",
@@ -553,7 +553,7 @@ func TestHTTPURL_UnmarshalText(t *testing.T) {
 			{
 				"string bytes: invalid host: empty",
 				[]byte("http://"),
-				"invalid string: invalid host: empty",
+				"invalid string: invalid host: must not be empty",
 			},
 			{
 				"string bytes: invalid scheme",
@@ -643,7 +643,7 @@ func TestHTTPURL_JSONUnmarshaling(t *testing.T) {
 			{
 				"quoted string bytes: empty",
 				[]byte(`""`),
-				"invalid string: empty",
+				"invalid string: must not be empty",
 			},
 			{
 				"quoted string bytes: missing scheme",
@@ -653,7 +653,7 @@ func TestHTTPURL_JSONUnmarshaling(t *testing.T) {
 			{
 				"quoted string bytes: invalid host: empty",
 				[]byte(`"http://"`),
-				"invalid string: invalid host: empty",
+				"invalid string: invalid host: must not be empty",
 			},
 			{
 				"quoted string bytes: invalid scheme",
@@ -728,7 +728,7 @@ func TestHTTPURL_YAMLUnmarshaling(t *testing.T) {
 			{
 				"quoted string bytes: empty",
 				[]byte(`""`),
-				"invalid node: empty",
+				"invalid node: must not be empty",
 			},
 			{
 				"quoted string bytes: missing scheme",
@@ -738,7 +738,7 @@ func TestHTTPURL_YAMLUnmarshaling(t *testing.T) {
 			{
 				"quoted string bytes: invalid host: empty",
 				[]byte(`"http://"`),
-				"invalid node: invalid host: empty",
+				"invalid node: invalid host: must not be empty",
 			},
 			{
 				"quoted string bytes: invalid scheme",
@@ -748,7 +748,7 @@ func TestHTTPURL_YAMLUnmarshaling(t *testing.T) {
 			{
 				"unquoted string bytes: invalid host: empty",
 				[]byte(`http://`),
-				"invalid node: invalid host: empty",
+				"invalid node: invalid host: must not be empty",
 			},
 			{
 				"unquoted string bytes: invalid scheme",

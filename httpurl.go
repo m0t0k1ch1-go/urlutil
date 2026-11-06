@@ -74,10 +74,10 @@ func MustNewHTTPURLFromString(s string) HTTPURL {
 
 func (hu *HTTPURL) setURL(u *url.URL) error {
 	if u == nil {
-		return errors.New("nil")
+		return errors.New("must not be nil")
 	}
 	if u.Host == "" {
-		return errors.New("invalid host: empty")
+		return errors.New("invalid host: must not be empty")
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return errors.New("invalid scheme: must be http or https")
@@ -90,7 +90,7 @@ func (hu *HTTPURL) setURL(u *url.URL) error {
 
 func (hu *HTTPURL) setString(s string) error {
 	if len(s) == 0 {
-		return errors.New("empty")
+		return errors.New("must not be empty")
 	}
 
 	u, err := url.Parse(s)
